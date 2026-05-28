@@ -3,8 +3,11 @@ import type { Range } from "@/types";
 const nf = new Intl.NumberFormat();
 export const fmt = (n: number) => nf.format(n);
 
-export const pct = (n: number, total: number) =>
-  total > 0 ? `${((n / total) * 100).toFixed(1)}%` : "0%";
+// Clamp: per-dimension counts (e.g. languages) can exceed the visitor total.
+export const ratio = (n: number, total: number) =>
+  total > 0 ? Math.min(100, (n / total) * 100) : 0;
+
+export const pct = (n: number, total: number) => `${ratio(n, total).toFixed(1)}%`;
 
 /** ISO 3166-1 alpha-2 → flag emoji via regional indicator symbols. */
 export function flag(code?: string): string {
@@ -28,6 +31,15 @@ export const RANGES = [
   { value: "30", label: "Last 30 days" },
   { value: "90", label: "Last 90 days" },
 ] as const;
+
+// /stats/sizes returns ids with empty names; map them like GoatCounter's UI.
+export const SIZE_LABELS: Record<string, string> = {
+  phone: "Phones",
+  tablet: "Tablets",
+  desktop: "Desktop",
+  desktophd: "Large desktop",
+  unknown: "(unknown)",
+};
 
 export const labelDay = (day: string) =>
   new Date(day + "T00:00:00").toLocaleDateString(undefined, {

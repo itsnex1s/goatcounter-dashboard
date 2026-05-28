@@ -30,9 +30,9 @@ keeps the same ethos:
 ## Features
 
 - Overview KPIs + pageviews-over-time chart
-- Top pages, referrers, browsers, operating systems, screen sizes, languages
-- Locations as a world choropleth
-- Date-range picker, multi-site switcher, light/dark theme
+- Top pages, referrers, browsers, operating systems, screen sizes, languages,
+  campaigns, and top countries (with flag emojis)
+- Date-range picker, light/dark theme
 - Reads GoatCounter's documented `/api/v0/stats/*` API — no coupling to its database
 - Ships as static assets: **0 MB resident server RAM**
 
@@ -58,18 +58,28 @@ pnpm build          # -> dist/  (static files, deploy anywhere)
 pnpm preview        # preview the production build
 ```
 
-Deploy `dist/` to any static host. To avoid CORS, serve it from the same origin as
-your GoatCounter instance (or enable CORS for the dashboard's origin in GoatCounter).
+Deploy `dist/` to any static host — an object store, your existing edge
+(Cloudflare, Caddy, nginx), or alongside GoatCounter itself.
 
 ## Configuration
 
-On first load, paste a GoatCounter **API token** (GoatCounter → *Settings → API*)
-and your instance URL. Both are stored locally in your browser — never transmitted
-anywhere except your GoatCounter instance.
+On first load, paste your GoatCounter **instance URL** and an **API token**
+(GoatCounter → *Settings → API*, with the `stats` permission). Both are stored in
+your browser's `localStorage` and sent only to your own GoatCounter instance.
+
+GoatCounter's API already returns `Access-Control-Allow-Origin: *`, so the
+dashboard works **cross-origin** out of the box — no proxy needed. Its API is
+rate-limited to **4 req/s** by default; the dashboard throttles and retries to
+stay within that, but for a snappier multi-widget load you can raise it on your
+instance:
+
+```sh
+goatcounter serve -ratelimit api:100/1 ...
+```
 
 ## Tech stack
 
-Vite · React · TypeScript · Tailwind CSS · shadcn/ui · Recharts · react-simple-maps.
+Vite · React · TypeScript · Tailwind CSS · shadcn/ui · Recharts.
 No backend, no database, no runtime server.
 
 ## Non-goals

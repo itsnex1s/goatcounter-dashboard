@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { fmt, pct } from "@/lib/format";
+import { fmt, pct, ratio } from "@/lib/format";
 import type { HitStat } from "@/types";
 
 interface Props {
@@ -11,22 +11,21 @@ interface Props {
 }
 
 export function MetricTable({ title, rows, total, prefix }: Props) {
+  const visible = rows.filter((r) => r.count > 0);
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {rows.length === 0 && (
+        {visible.length === 0 && (
           <p className="text-sm text-muted-foreground">No data</p>
         )}
-        {rows.map((row, i) => (
+        {visible.map((row, i) => (
           <div key={row.id ?? row.name ?? i} className="relative">
             <div
               className="absolute inset-y-0 left-0 rounded-sm bg-accent"
-              style={{
-                width: total > 0 ? `${(row.count / total) * 100}%` : "0%",
-              }}
+              style={{ width: `${ratio(row.count, total)}%` }}
             />
             <div className="relative flex items-center justify-between px-2 py-1 text-sm">
               <span className="truncate pr-3">

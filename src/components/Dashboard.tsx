@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { KpiTiles } from "@/components/KpiTiles";
 import { MetricTable } from "@/components/MetricTable";
 import { useDashboard } from "@/hooks/useDashboard";
-import { flag, lastDays } from "@/lib/format";
+import { flag, lastDays, SIZE_LABELS } from "@/lib/format";
 import type { HitStat } from "@/types";
 
 const PageviewsChart = lazy(() => import("@/components/PageviewsChart"));
@@ -71,21 +71,30 @@ export function Dashboard({
               <MetricTable
                 title="Top pages"
                 rows={topPages}
-                total={data.total.total}
+                total={data.total.total_utc}
               />
-              {data.metrics.map((m) => (
-                <MetricTable
-                  key={m.page}
-                  title={m.title}
-                  rows={m.rows}
-                  total={data.total.total}
-                  prefix={
-                    m.page === "locations"
-                      ? (r) => flag(r.id || r.name)
-                      : undefined
-                  }
-                />
-              ))}
+              {data.metrics
+                .filter((m) => m.rows.length > 0)
+                .map((m) => (
+                  <MetricTable
+                    key={m.page}
+                    title={m.title}
+                    rows={
+                      m.page === "sizes"
+                        ? m.rows.map((r) => ({
+                            ...r,
+                            name: SIZE_LABELS[r.id ?? ""] ?? r.name,
+                          }))
+                        : m.rows
+                    }
+                    total={data.total.total_utc}
+                    prefix={
+                      m.page === "locations"
+                        ? (r) => flag(r.id || r.name)
+                        : undefined
+                    }
+                  />
+                ))}
             </div>
           </>
         )}

@@ -33,8 +33,9 @@ Vite builds to static assets served by the edge we already run (cloudflared/Cadd
   Tailwind), so we ship only the primitives we actually use. No component-library
   runtime.
 - **Recharts** — the one time-series chart. Lazy-loaded (it's the heaviest dep).
-- **react-simple-maps** — world choropleth. Lazy-loaded; map topojson fetched on
-  demand, never in the main bundle.
+- Countries render as a plain metric table with **flag emojis** derived from the
+  ISO code (zero deps) instead of a topojson choropleth — keeps the bundle tiny.
+  A lazy `react-simple-maps` choropleth stays an optional future add-on.
 - **No** state-management lib, **no** data-fetching lib, **no** router lib, **no**
   date lib. Hooks + native `fetch` + `URLSearchParams` + `Intl`.
 
@@ -46,8 +47,11 @@ Vite builds to static assets served by the edge we already run (cloudflared/Cadd
   `React.lazy` chunks, excluded from the initial load.
 - **Browser memory:** no client-side aggregation — render finished API rows as-is.
   Cap in-memory series length; no retaining raw history.
-- **Caching:** hand-rolled `sessionStorage` response cache keyed by
-  `(site, range, widget)` to avoid refetch on navigation. ~30 LOC, no SWR/query lib.
+- **Caching:** hand-rolled `sessionStorage` response cache keyed by the full
+  request URL to avoid refetch on navigation. No SWR/query lib.
+- **Rate limit:** GoatCounter's API allows 4 req/s by default, so the client
+  fetches with bounded concurrency and retries on 429 (and on a rate-limited CORS
+  preflight, which surfaces as a thrown fetch). Polite by default on any instance.
 
 ## 5. Data layer
 
@@ -76,22 +80,24 @@ GoatCounter's shapes. ~150–250 LOC.
 - `api.ts` — typed fetchers + cache (~200 LOC)
 - `App` shell — header, site switcher, date-range, theme toggle, URL state (~400)
 - `KpiTiles` — total pageviews etc. (~120)
-- `PageviewsChart` — lazy Recharts area/bar (~250)
-- `WorldMap` — lazy choropleth (~300)
-- `MetricTable` — one reusable bar-fill/% table with drill-down, wired 6–7× (~350 + ~40 each)
+- `PageviewsChart` — lazy Recharts area chart (~70)
+- `MetricTable` — one reusable bar-fill/% table, wired 8× (top pages + 7 metrics);
+  countries pass a flag-emoji prefix, sizes a label map (~60)
 - shadcn primitives actually used: card, button, select, popover, tabs, skeleton, dropdown
 - states: loading skeletons, empty, error, token onboarding (~300)
 
 ## 7. Milestones
 
-- **M0 — Scaffold** *(this commit + next)*: repo, docs, license, Vite/TS/Tailwind
-  config, shadcn init, lint. Runnable empty shell.
-- **M1 — MVP**: token onboarding, single site, date-range, KPI tiles, pageviews
-  chart, top-pages table reading the real API. Usable end-to-end.
-- **M2 — Parity core**: all metric tables, referrer drill-down, world map,
-  multi-site switcher, light/dark, responsive, sessionStorage cache.
-- **M3 — Polish & ship**: bundle-budget CI check, deploy guide (same-origin +
-  CORS), screenshots, demo against a public GoatCounter, v0.1.0 tag.
+- **M0 — Scaffold** ✅: repo, docs, license, Vite/TS/Tailwind/shadcn config, lint.
+- **M1 — MVP** ✅: token onboarding, date-range, KPI tiles, pageviews chart,
+  top-pages table reading the real API.
+- **M2 — Parity core** ✅: all metric tables (referrers, browsers, systems,
+  countries, sizes, languages, campaigns), light/dark, responsive, skeleton
+  loading, error states, sessionStorage cache, rate-limit-aware fetching.
+  Verified against a live GoatCounter instance.
+- **M3 — Future**: per-page referrer drill-down (the `/stats/hits/{id}` client
+  call already exists), optional lazy `react-simple-maps` choropleth,
+  multi-site switcher, bundle-budget CI check.
 
 ## 8. Explicit non-goals (data ceiling)
 

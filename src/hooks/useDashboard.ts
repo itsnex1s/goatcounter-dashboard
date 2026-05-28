@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/api";
-import type { HitList, HitStat, Range, StatsPage, TotalResponse } from "@/types";
+import type {
+  HitList,
+  HitsResponse,
+  HitStat,
+  Range,
+  StatsPage,
+  StatsResponse,
+  TotalResponse,
+} from "@/types";
 
 export interface MetricGroup {
   page: StatsPage;
@@ -21,12 +29,30 @@ const METRICS: { page: StatsPage; title: string }[] = [
   { page: "locations", title: "Countries" },
   { page: "sizes", title: "Screen sizes" },
   { page: "languages", title: "Languages" },
+  { page: "campaigns", title: "Campaigns" },
 ];
 
 interface State {
   data: DashboardData | null;
   loading: boolean;
   error: string | null;
+}
+
+// Run tasks with bounded concurrency to stay friendly to GoatCounter's API
+// rate limit (4 req/s by default); each task still retries on 429 internally.
+async function pool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results = new Array<T>(tasks.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < tasks.length) {
+      const i = next++;
+      results[i] = await tasks[i]();
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, tasks.length) }, worker),
+  );
+  return results;
 }
 
 export function useDashboard(range: Range): State {
@@ -40,13 +66,20 @@ export function useDashboard(range: Range): State {
     let alive = true;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    Promise.all([
-      api.total(range),
-      api.hits(range),
-      ...METRICS.map((m) => api.page(m.page, range)),
-    ])
-      .then(([total, hits, ...metricRes]) => {
+    const tasks: Array<
+      () => Promise<TotalResponse | HitsResponse | StatsResponse>
+    > = [
+      () => api.total(range),
+      () => api.hits(range),
+      ...METRICS.map((m) => () => api.page(m.page, range)),
+    ];
+
+    pool(tasks, 4)
+      .then((results) => {
         if (!alive) return;
+        const total = results[0] as TotalResponse;
+        const hits = results[1] as HitsResponse;
+        const metricRes = results.slice(2) as StatsResponse[];
         setState({
           loading: false,
           error: null,
