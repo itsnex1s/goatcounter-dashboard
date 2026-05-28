@@ -1,0 +1,21 @@
+{
+  "name": "goatcounter-dashboard",
+  "version": "0.0.0",
+  "description": "A featherweight, zero-runtime web dashboard for self-hosted GoatCounter.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "goatcounter",
+    "analytics",
+    "dashboard",
+    "self-hosted",
+    "privacy",
+    "static"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  }
+}
