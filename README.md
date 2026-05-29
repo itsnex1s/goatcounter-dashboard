@@ -1,6 +1,6 @@
 # GoatCounter Dashboard
 
-> A featherweight, zero-runtime web dashboard for self-hosted [GoatCounter](https://www.goatcounter.com).
+> A featherweight, zero-runtime web dashboard for self-hosted [GoatCounter](https://github.com/arp242/goatcounter).
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![stack](https://img.shields.io/badge/React-Vite-149eca)
