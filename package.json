@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "A featherweight, zero-runtime web dashboard for self-hosted GoatCounter.",
   "license": "MIT",
+  "author": "itsnex1s",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsnex1s/goatcounter-dashboard.git"
+  },
+  "homepage": "https://github.com/itsnex1s/goatcounter-dashboard#readme",
+  "bugs": "https://github.com/itsnex1s/goatcounter-dashboard/issues",
   "type": "module",
   "keywords": [
     "goatcounter",
