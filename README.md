@@ -12,6 +12,13 @@ No backend, no database, no server process. It builds to a folder of static file
 and renders your stats entirely in the browser by calling GoatCounter's API.
 **Idle RAM cost on your server: zero.**
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png" />
+  <img alt="GoatCounter Dashboard" src="docs/dashboard-light.png" />
+</picture>
+
+<sub>Screenshot uses sample data.</sub>
+
 ## Why
 
 GoatCounter is a single ~30 MB Go binary — that's the whole point. A dashboard for
