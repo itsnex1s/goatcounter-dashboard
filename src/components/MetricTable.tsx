@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { fmt, pct, ratio } from "@/lib/format";
 import type { HitStat } from "@/types";
@@ -8,9 +9,11 @@ interface Props {
   total: number;
   /** Optional leading glyph per row (e.g. a country flag). */
   prefix?: (row: HitStat) => string;
+  /** When set, rows become clickable (e.g. to drill into a page). */
+  onRowClick?: (row: HitStat) => void;
 }
 
-export function MetricTable({ title, rows, total, prefix }: Props) {
+export function MetricTable({ title, rows, total, prefix, onRowClick }: Props) {
   const visible = rows.filter((r) => r.count > 0);
   return (
     <Card>
@@ -27,7 +30,15 @@ export function MetricTable({ title, rows, total, prefix }: Props) {
               className="absolute inset-y-0 left-0 rounded-sm bg-accent"
               style={{ width: `${ratio(row.count, total)}%` }}
             />
-            <div className="relative flex items-center justify-between px-2 py-1 text-sm">
+            <button
+              type="button"
+              disabled={!onRowClick}
+              onClick={() => onRowClick?.(row)}
+              className={cn(
+                "relative flex w-full items-center justify-between rounded-sm px-2 py-1 text-left text-sm",
+                onRowClick && "hover:bg-foreground/5",
+              )}
+            >
               <span className="truncate pr-3">
                 {prefix && <span className="mr-1.5">{prefix(row)}</span>}
                 {row.name || "(none)"}
@@ -38,7 +49,7 @@ export function MetricTable({ title, rows, total, prefix }: Props) {
                   {pct(row.count, total)}
                 </span>
               </span>
-            </div>
+            </button>
           </div>
         ))}
       </CardContent>

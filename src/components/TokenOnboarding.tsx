@@ -1,12 +1,22 @@
 import { type FormEvent, useState } from "react";
 import { Goal } from "lucide-react";
-import { api, ApiError, setCreds } from "@/api";
+import { addConnection, api, ApiError } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export function TokenOnboarding({ onReady }: { onReady: () => void }) {
-  const [url, setUrl] = useState("");
+export function TokenOnboarding({
+  onReady,
+  onCancel,
+  canCancel = false,
+}: {
+  onReady: () => void;
+  onCancel?: () => void;
+  canCancel?: boolean;
+}) {
+  // Default to the current origin: when the dashboard is served alongside
+  // GoatCounter, the API lives here too — no need to type a URL.
+  const [url, setUrl] = useState(window.location.origin);
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +28,7 @@ export function TokenOnboarding({ onReady }: { onReady: () => void }) {
     const creds = { url: url.trim().replace(/\/+$/, ""), token: token.trim() };
     try {
       await api.me(creds); // validate before persisting
-      setCreds(creds);
+      addConnection(creds);
       onReady();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not connect");
@@ -68,9 +78,16 @@ export function TokenOnboarding({ onReady }: { onReady: () => void }) {
                 {error}
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={busy}>
-              {busy ? "Connecting…" : "Connect"}
-            </Button>
+            <div className="flex gap-2">
+              {canCancel && (
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit" className="flex-1" disabled={busy}>
+                {busy ? "Connecting…" : "Connect"}
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
               Stored only in this browser. Requests go directly to your
               GoatCounter instance — nowhere else.

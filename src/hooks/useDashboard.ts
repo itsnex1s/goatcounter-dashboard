@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, ApiError } from "@/api";
+import { api, ApiError, type Connection } from "@/api";
 import type {
   HitList,
   HitsResponse,
@@ -55,7 +55,7 @@ async function pool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]>
   return results;
 }
 
-export function useDashboard(range: Range): State {
+export function useDashboard(conn: Connection, range: Range): State {
   const [state, setState] = useState<State>({
     data: null,
     loading: true,
@@ -69,9 +69,9 @@ export function useDashboard(range: Range): State {
     const tasks: Array<
       () => Promise<TotalResponse | HitsResponse | StatsResponse>
     > = [
-      () => api.total(range),
-      () => api.hits(range),
-      ...METRICS.map((m) => () => api.page(m.page, range)),
+      () => api.total(range, conn),
+      () => api.hits(range, conn),
+      ...METRICS.map((m) => () => api.page(m.page, range, conn)),
     ];
 
     pool(tasks, 4)
@@ -104,7 +104,7 @@ export function useDashboard(range: Range): State {
     return () => {
       alive = false;
     };
-  }, [range]);
+  }, [conn, range]);
 
   return state;
 }

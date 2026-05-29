@@ -1,29 +1,46 @@
-import { useState } from "react";
-import { clearCreds, getCreds } from "@/api";
+import { useCallback, useState } from "react";
+import {
+  activeConnection,
+  listConnections,
+  removeConnection,
+  setActive,
+} from "@/api";
 import { Dashboard } from "@/components/Dashboard";
 import { TokenOnboarding } from "@/components/TokenOnboarding";
 
-function siteLabel(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "GoatCounter";
-  }
-}
-
 export default function App() {
-  const [creds, setCredsState] = useState(getCreds);
+  const [, setTick] = useState(0);
+  const refresh = useCallback(() => setTick((n) => n + 1), []);
+  const [adding, setAdding] = useState(false);
 
-  if (!creds) {
-    return <TokenOnboarding onReady={() => setCredsState(getCreds())} />;
+  const connections = listConnections();
+  const active = activeConnection();
+
+  if (!active || adding) {
+    return (
+      <TokenOnboarding
+        canCancel={!!active}
+        onCancel={() => setAdding(false)}
+        onReady={() => {
+          setAdding(false);
+          refresh();
+        }}
+      />
+    );
   }
 
   return (
     <Dashboard
-      site={siteLabel(creds.url)}
-      onDisconnect={() => {
-        clearCreds();
-        setCredsState(null);
+      conn={active}
+      connections={connections}
+      onSwitch={(id) => {
+        setActive(id);
+        refresh();
+      }}
+      onAdd={() => setAdding(true)}
+      onRemove={() => {
+        removeConnection(active.id);
+        refresh();
       }}
     />
   );

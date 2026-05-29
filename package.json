@@ -1,6 +1,6 @@
 {
   "name": "goatcounter-dashboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A featherweight, zero-runtime web dashboard for self-hosted GoatCounter.",
   "license": "MIT",
   "author": "itsnex1s",
@@ -26,6 +26,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.1",
@@ -33,6 +34,7 @@
     "lucide-react": "^0.456.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-simple-maps": "^3.0.0",
     "recharts": "^2.13.3",
     "tailwind-merge": "^2.5.4"
   },
@@ -41,6 +43,7 @@
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/react-simple-maps": "^3.0.6",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.14.0",

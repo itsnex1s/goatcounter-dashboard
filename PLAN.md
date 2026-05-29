@@ -95,9 +95,11 @@ GoatCounter's shapes. ~150–250 LOC.
   countries, sizes, languages, campaigns), light/dark, responsive, skeleton
   loading, error states, sessionStorage cache, rate-limit-aware fetching.
   Verified against a live GoatCounter instance.
-- **M3 — Future**: per-page referrer drill-down (the `/stats/hits/{id}` client
-  call already exists), optional lazy `react-simple-maps` choropleth,
-  multi-site switcher, bundle-budget CI check.
+- **M3 — Done**: per-page referrer drill-down dialog, lazy `react-simple-maps`
+  world map, multi-connection switcher (several sites/instances), same-origin URL
+  default, error boundary around the lazy map, and CI (lint + build).
+- **Later**: hard bundle-size gate in CI; per-page sparklines; alpha2→numeric
+  country matching to cover every country on the map.
 
 ## 8. Explicit non-goals (data ceiling)
 

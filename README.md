@@ -2,6 +2,7 @@
 
 > A featherweight, zero-runtime web dashboard for self-hosted [GoatCounter](https://github.com/arp242/goatcounter).
 
+[![CI](https://github.com/itsnex1s/goatcounter-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/itsnex1s/goatcounter-dashboard/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![stack](https://img.shields.io/badge/React-Vite-149eca)
 ![backend](https://img.shields.io/badge/backend-none-success)
@@ -38,7 +39,10 @@ keeps the same ethos:
 
 - Overview KPIs + pageviews-over-time chart
 - Top pages, referrers, browsers, operating systems, screen sizes, languages,
-  campaigns, and top countries (with flag emojis)
+  and campaigns
+- Top countries as a **world map** + a ranked list with flag emojis
+- **Click a page** to drill into its referrers
+- **Multiple connections** — switch between sites/instances from the header
 - Date-range picker, light/dark theme
 - Reads GoatCounter's documented `/api/v0/stats/*` API — no coupling to its database
 - Ships as static assets: **0 MB resident server RAM**
@@ -71,8 +75,13 @@ Deploy `dist/` to any static host — an object store, your existing edge
 ## Configuration
 
 On first load, paste your GoatCounter **instance URL** and an **API token**
-(GoatCounter → *Settings → API*, with the `stats` permission). Both are stored in
-your browser's `localStorage` and sent only to your own GoatCounter instance.
+(GoatCounter → *Settings → API*, with the `stats` permission). The URL field
+defaults to the current origin, so when the dashboard is served alongside
+GoatCounter you only need the token. Credentials are stored in your browser's
+`localStorage` and sent only to your own GoatCounter instance.
+
+Add more connections from the header (the **+** button) to switch between several
+sites or instances; each connection keeps its own URL + token.
 
 GoatCounter's API already returns `Access-Control-Allow-Origin: *`, so the
 dashboard works **cross-origin** out of the box — no proxy needed. Its API is
@@ -84,10 +93,16 @@ instance:
 goatcounter serve -ratelimit api:100/1 ...
 ```
 
+### Serving it as GoatCounter's dashboard
+
+Want `stats.example.com` to show this dashboard instead of GoatCounter's built-in
+one (while keeping the `/count` beacon and `/api` working)? See
+[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for a small nginx reverse-proxy recipe.
+
 ## Tech stack
 
-Vite · React · TypeScript · Tailwind CSS · shadcn/ui · Recharts.
-No backend, no database, no runtime server.
+Vite · React · TypeScript · Tailwind CSS · shadcn/ui · Recharts · react-simple-maps
+(lazy-loaded). No backend, no database, no runtime server.
 
 ## Non-goals
 

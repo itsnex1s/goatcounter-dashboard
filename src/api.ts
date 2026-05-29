@@ -8,28 +8,83 @@ import type {
   TotalResponse,
 } from "@/types";
 
-const URL_KEY = "gcd_url";
-const TOKEN_KEY = "gcd_token";
-
 export interface Creds {
   url: string;
   token: string;
 }
 
-export function getCreds(): Creds | null {
-  const url = localStorage.getItem(URL_KEY);
-  const token = localStorage.getItem(TOKEN_KEY);
-  return url && token ? { url, token } : null;
+/** A saved GoatCounter connection — lets the dashboard switch between sites. */
+export interface Connection extends Creds {
+  id: string;
+  label: string;
 }
 
-export function setCreds(c: Creds) {
-  localStorage.setItem(URL_KEY, c.url.replace(/\/+$/, ""));
-  localStorage.setItem(TOKEN_KEY, c.token);
+const CONNS = "gcd_conns";
+const ACTIVE = "gcd_active";
+
+export function hostLabel(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url || "GoatCounter";
+  }
 }
 
-export function clearCreds() {
-  localStorage.removeItem(URL_KEY);
-  localStorage.removeItem(TOKEN_KEY);
+// One-time migration from the original single-connection keys.
+function migrate() {
+  if (localStorage.getItem(CONNS)) return;
+  const url = localStorage.getItem("gcd_url");
+  const token = localStorage.getItem("gcd_token");
+  if (url && token) {
+    const c: Connection = { id: crypto.randomUUID(), label: hostLabel(url), url, token };
+    localStorage.setItem(CONNS, JSON.stringify([c]));
+    localStorage.setItem(ACTIVE, c.id);
+  }
+  localStorage.removeItem("gcd_url");
+  localStorage.removeItem("gcd_token");
+}
+
+export function listConnections(): Connection[] {
+  migrate();
+  try {
+    return JSON.parse(localStorage.getItem(CONNS) || "[]") as Connection[];
+  } catch {
+    return [];
+  }
+}
+
+export function activeConnection(): Connection | null {
+  const list = listConnections();
+  const id = localStorage.getItem(ACTIVE);
+  return list.find((c) => c.id === id) ?? list[0] ?? null;
+}
+
+export function setActive(id: string) {
+  localStorage.setItem(ACTIVE, id);
+}
+
+export function addConnection(c: Creds & { label?: string }): Connection {
+  const url = c.url.replace(/\/+$/, "");
+  const conn: Connection = {
+    id: crypto.randomUUID(),
+    label: c.label?.trim() || hostLabel(url),
+    url,
+    token: c.token,
+  };
+  const list = listConnections();
+  list.push(conn);
+  localStorage.setItem(CONNS, JSON.stringify(list));
+  localStorage.setItem(ACTIVE, conn.id);
+  return conn;
+}
+
+export function removeConnection(id: string) {
+  const list = listConnections().filter((c) => c.id !== id);
+  localStorage.setItem(CONNS, JSON.stringify(list));
+  if (localStorage.getItem(ACTIVE) === id) {
+    if (list[0]) localStorage.setItem(ACTIVE, list[0].id);
+    else localStorage.removeItem(ACTIVE);
+  }
   sessionStorage.clear();
 }
 
@@ -66,7 +121,7 @@ interface Opts {
 async function get<T>(
   path: string,
   params: Record<string, string | number | undefined> = {},
-  { creds = getCreds(), retries = 0 }: Opts = {},
+  { creds = activeConnection(), retries = 0 }: Opts = {},
 ): Promise<T> {
   if (!creds) throw new ApiError(401, "Not configured");
   const endpoint = `${creds.url}/api/v0${path}${query(params)}`;
@@ -113,11 +168,12 @@ const RETRIES = 5;
 
 export const api = {
   me: (creds?: Creds) => get<MeResponse>("/me", {}, { creds }),
-  total: (r: Range) => get<TotalResponse>("/stats/total", { ...r }, { retries: RETRIES }),
-  hits: (r: Range, limit = 12) =>
-    get<HitsResponse>("/stats/hits", { ...r, limit }, { retries: RETRIES }),
-  page: (page: StatsPage, r: Range, limit = 9) =>
-    get<StatsResponse>(`/stats/${page}`, { ...r, limit }, { retries: RETRIES }),
-  refs: (pathId: number, r: Range, limit = 9) =>
-    get<RefsResponse>(`/stats/hits/${pathId}`, { ...r, limit }, { retries: RETRIES }),
+  total: (r: Range, creds?: Creds) =>
+    get<TotalResponse>("/stats/total", { ...r }, { creds, retries: RETRIES }),
+  hits: (r: Range, creds?: Creds, limit = 12) =>
+    get<HitsResponse>("/stats/hits", { ...r, limit }, { creds, retries: RETRIES }),
+  page: (page: StatsPage, r: Range, creds?: Creds, limit = 9) =>
+    get<StatsResponse>(`/stats/${page}`, { ...r, limit }, { creds, retries: RETRIES }),
+  refs: (pathId: number, r: Range, creds?: Creds, limit = 9) =>
+    get<RefsResponse>(`/stats/hits/${pathId}`, { ...r, limit }, { creds, retries: RETRIES }),
 };
